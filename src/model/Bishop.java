@@ -7,11 +7,11 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
-public class Rook extends Figure{
+public class Bishop extends Figure{
     
-    public Rook()
+    public Bishop()
     {
         super.setActive(false);
         super.setImage(null);

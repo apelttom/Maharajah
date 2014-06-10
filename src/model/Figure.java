@@ -7,7 +7,7 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
 import java.awt.Image;
 

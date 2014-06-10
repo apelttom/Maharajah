@@ -7,11 +7,11 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
-public class Bishop extends Figure{
+public class Pawn extends Figure {
     
-    public Bishop()
+    public Pawn()
     {
         super.setActive(false);
         super.setImage(null);

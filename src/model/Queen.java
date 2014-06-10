@@ -7,7 +7,7 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
 public class Queen extends Figure{
     

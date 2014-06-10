@@ -7,11 +7,11 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
-public class Knight extends Figure{
+public class Maharaja extends Figure{
     
-    public Knight()
+    public Maharaja()
     {
         super.setActive(false);
         super.setImage(null);

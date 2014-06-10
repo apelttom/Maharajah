@@ -7,13 +7,20 @@
     Saúl Zamora 
 */
 
-package Model;
+package model;
 
-public class Pawn extends Figure {
+public class ChessBoard {
+    private Figure[][] grid = new Figure[8][8];
     
-    public Pawn()
+    //builder
+    public ChessBoard()
     {
-        super.setActive(false);
-        super.setImage(null);
+        grid = null;
     }
+    
+    //getter
+    public Figure[][] getGrid() {
+        return grid;
+    }
+    
 }
