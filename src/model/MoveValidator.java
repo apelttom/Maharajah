@@ -17,8 +17,8 @@ public class MoveValidator {
     private Figure sourceFigure;
     private Figure targetFigure;
 
-    public MoveValidator(Game chessGame) {
-        this.game = chessGame;
+    public MoveValidator(Game maharajaGame) {
+        this.game = maharajaGame;
     }
 
     /**
@@ -38,7 +38,7 @@ public class MoveValidator {
 
         // source piece does not exist
         if (sourceFigure == null) {
-            System.out.println("no source piece");
+            System.out.println("No source figure.");
             return false;
         }
 
@@ -50,14 +50,14 @@ public class MoveValidator {
                 && this.game.getGameState() == Game.GAME_STATE_BLACK) {
             // ok
         } else {
-            System.out.println("it's not your turn");
+            System.out.println("Not your turn!");
             return false;
         }
 
         // check if target location within boundaries
         if (targetRow < Figure.ROW_1 || targetRow > Figure.ROW_8
                 || targetColumn < Figure.COLUMN_A || targetColumn > Figure.COLUMN_H) {
-            System.out.println("target row or column out of scope");
+            System.out.println("Warning #1: Target location out of boundaries.");
             return false;
         }
 
@@ -92,14 +92,14 @@ public class MoveValidator {
         } else {
             // ok
         }
-        // handle stalemate and checkmate
+        /**
+         * handler for stalemate and checkmate
+         */
         return true;
     }
 
     private boolean isTargetLocationCaptureable() {
-        if (targetFigure == null) {
-            return false;
-        } else if (targetFigure.getColor() != sourceFigure.getColor()) {
+        if (targetFigure.getColor() != sourceFigure.getColor()) {
             return true;
         } else {
             return false;
@@ -109,13 +109,21 @@ public class MoveValidator {
     private boolean isTargetLocationFree() {
         return targetFigure == null;
     }
-
+    
+    /**
+     * Validation for the BHISOP move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidBishopMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
         // target location possible?
         if (isTargetLocationFree() || isTargetLocationCaptureable()) {
             //ok
         } else {
-            System.out.println("Target location not free nor captureable.");
+            System.out.println("Warning #2: Target location not free nor captureable.");
             return false;
         }
 
@@ -144,24 +152,48 @@ public class MoveValidator {
             // not moving diagonally
             System.out.println(diffRow);
             System.out.println(diffColumn);
-            System.out.println("Not moving diagonally.");
+            System.out.println("Warning #3: Not moving diagonally.");
             isValid = false;
         }
         return isValid;
     }
-
+    
+    /**
+     * Validation for the QUEEN move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidQueenMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
         boolean result = isValidBishopMove(sourceRow, sourceColumn, targetRow, targetColumn);
         result |= isValidRookMove(sourceRow, sourceColumn, targetRow, targetColumn);
         return result;
     }
     
+    /**
+     * Validation for the MAHARAJA move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidMaharajaMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
         boolean result = isValidQueenMove(sourceRow, sourceColumn, targetRow, targetColumn);
         result |= isValidKnightMove(sourceRow, sourceColumn, targetRow, targetColumn);
         return result;
     }
-
+    
+    /**
+     * Validation for the PAWN move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidPawnMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
 
         boolean isValid = false;
@@ -174,13 +206,13 @@ public class MoveValidator {
                         // move one down
                         isValid = true;
                     } else {
-                        System.out.println("Not moving one down.");
+                        System.out.println("Warning #4: Not moving one down.");
                         isValid = false;
                     }
                 }
             } else {
                 // not the same column
-                System.out.println("Not staying in same column.");
+                System.out.println("Warning #5: Not staying in same column.");
                 isValid = false;
             }
         } else if (isTargetLocationCaptureable()) {
@@ -192,26 +224,34 @@ public class MoveValidator {
                         // move one down
                         isValid = true;
                     } else {
-                        System.out.println("Not moving one down.");
+                        System.out.println("Warning #6: Not moving one down.");
                         isValid = false;
                     }
                 }
             } else {
                 // note one column to the left or right
-                System.out.println("Not moving one column to left or right.");
+                System.out.println("Warning #7: Not moving one column to left or right.");
                 isValid = false;
             }
         }
         return isValid;
     }
-
+    
+    /**
+     * Validation for the KNIGHT move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidKnightMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
         
         // target location possible?
         if (isTargetLocationFree() || isTargetLocationCaptureable()) {
             //ok
         } else {
-            System.out.println("Target location not free nor captureable.");
+            System.out.println("Warning #8: Target location not free nor captureable.");
             return false;
         }
 
@@ -243,14 +283,22 @@ public class MoveValidator {
             return false;
         }
     }
-
+    
+    /**
+     * Validation for the KING move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidKingMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
 
         // target location possible?
         if (isTargetLocationFree() || isTargetLocationCaptureable()) {
             //ok
         } else {
-            System.out.println("Target location not free nor captureable.");
+            System.out.println("Warning #9: Target location not free nor captureable.");
             return false;
         }
         
@@ -280,17 +328,30 @@ public class MoveValidator {
             //up left
             isValid = true;
         } else {
-            System.out.println("Moving too far.");
+            System.out.println("Warning #10: Moving too far.");
             isValid = false;
         }
+        
+        /**
+         * Validation for stalemate and checkmate
+         */
+        
         return isValid;
     }
-
+    
+    /**
+     * Validation for the ROOK move
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @return true if valid move
+     */
     private boolean isValidRookMove(int sourceRow, int sourceColumn, int targetRow, int targetColumn) {
         if (isTargetLocationFree() || isTargetLocationCaptureable()) {
             //ok
         } else {
-            System.out.println("Target location not free nor captureable.");
+            System.out.println("Warning #11: Target location not free nor captureable.");
             return false;
         }
 
@@ -318,13 +379,25 @@ public class MoveValidator {
 
         } else {
             // not moving diagonally
-            System.out.println("Not moving straight.");
+            System.out.println("Warning #12: Not moving straight.");
             isValid = false;
         }
 
         return isValid;
     }
-
+    
+    /**
+     * Checks for figure between source and target locations. Bishops and Rooks
+     * can take several "steps" at a time, so it's necessary to check in all
+     * these steps (rowIncrementPerStep and columnIncrementPerStep)
+     * @param sourceRow
+     * @param sourceColumn
+     * @param targetRow
+     * @param targetColumn
+     * @param rowIncrementPerStep 
+     * @param columnIncrementPerStep
+     * @return 
+     */
     private boolean arePiecesBetweenSourceAndTarget(int sourceRow, int sourceColumn,
             int targetRow, int targetColumn, int rowIncrementPerStep, int columnIncrementPerStep) {
 
@@ -340,7 +413,7 @@ public class MoveValidator {
             }
 
             if (this.game.isNonCapturedFigureAt(currentRow, currentColumn)) {
-                System.out.println("Figures in between source and target.");
+                System.out.println("Warning #13: Figures in between source and target.");
                 return true;
             }
 
@@ -349,124 +422,4 @@ public class MoveValidator {
         }
         return false;
     }
-
-    public static void main(String[] args) {
-        Game ch = new Game();
-        MoveValidator mo = new MoveValidator(ch);
-        Move move = null;
-        boolean isValid;
-
-        int sourceRow;
-        int sourceColumn;
-        int targetRow;
-        int targetColumn;
-        int testCounter = 1;
-
-        // ok
-        sourceRow = Figure.ROW_2;
-        sourceColumn = Figure.COLUMN_D;
-        targetRow = Figure.ROW_3;
-        targetColumn = Figure.COLUMN_D;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (true == isValid));
-        testCounter++;
-
-        // it's not white's turn
-        sourceRow = Figure.ROW_2;
-        sourceColumn = Figure.COLUMN_B;
-        targetRow = Figure.ROW_3;
-        targetColumn = Figure.COLUMN_B;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        System.out.println(testCounter + ". test result: " + (false == isValid));
-        testCounter++;
-
-        // ok
-        sourceRow = Figure.ROW_7;
-        sourceColumn = Figure.COLUMN_E;
-        targetRow = Figure.ROW_6;
-        targetColumn = Figure.COLUMN_E;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (true == isValid));
-        testCounter++;
-
-        // pieces in the way
-        sourceRow = Figure.ROW_1;
-        sourceColumn = Figure.COLUMN_F;
-        targetRow = Figure.ROW_4;
-        targetColumn = Figure.COLUMN_C;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        System.out.println(testCounter + ". test result: " + (false == isValid));
-        testCounter++;
-
-        // ok
-        sourceRow = Figure.ROW_1;
-        sourceColumn = Figure.COLUMN_C;
-        targetRow = Figure.ROW_4;
-        targetColumn = Figure.COLUMN_F;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (true == isValid));
-        testCounter++;
-
-        // ok
-        sourceRow = Figure.ROW_8;
-        sourceColumn = Figure.COLUMN_B;
-        targetRow = Figure.ROW_6;
-        targetColumn = Figure.COLUMN_C;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (true == isValid));
-        testCounter++;
-
-        // invalid knight move
-        sourceRow = Figure.ROW_1;
-        sourceColumn = Figure.COLUMN_G;
-        targetRow = Figure.ROW_3;
-        targetColumn = Figure.COLUMN_G;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        System.out.println(testCounter + ". test result: " + (false == isValid));
-        testCounter++;
-
-        // invalid knight move
-        sourceRow = Figure.ROW_1;
-        sourceColumn = Figure.COLUMN_G;
-        targetRow = Figure.ROW_2;
-        targetColumn = Figure.COLUMN_E;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        System.out.println(testCounter + ". test result: " + (false == isValid));
-        testCounter++;
-
-        // ok
-        sourceRow = Figure.ROW_1;
-        sourceColumn = Figure.COLUMN_G;
-        targetRow = Figure.ROW_3;
-        targetColumn = Figure.COLUMN_H;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (true == isValid));
-        testCounter++;
-
-        // pieces in between
-        sourceRow = Figure.ROW_8;
-        sourceColumn = Figure.COLUMN_A;
-        targetRow = Figure.ROW_5;
-        targetColumn = Figure.COLUMN_A;
-        move = new Move(sourceRow, sourceColumn, targetRow, targetColumn);
-        isValid = mo.isMoveValid(move);
-        ch.movePiece(move);
-        System.out.println(testCounter + ". test result: " + (false == isValid));
-        testCounter++;
-    }
-
 }

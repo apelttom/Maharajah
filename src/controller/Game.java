@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import model.Figure;
 import model.Move;
 import model.MoveValidator;
+import model.Player;
 
 /**
  *
@@ -19,14 +20,21 @@ import model.MoveValidator;
  * Created on 10/06/2014
  * Last modified on 10/06/2014
  */
-public class Game {
+public class Game implements Runnable{
     private int gameState = GAME_STATE_WHITE;
     public static final int GAME_STATE_WHITE = 0;
     public static final int GAME_STATE_BLACK = 1;
-    public static final int GAME_STATE_END = 2;
+    public static final int GAME_STATE_END_BLACK_WON = 2;
+    public static final int GAME_STATE_END_WHITE_WON = 3;
     
-    private ArrayList<Figure> figures = new ArrayList<Figure>();
+    private ArrayList<Figure> figures = new ArrayList<>();
+    private ArrayList<Figure> capturedFigures = new ArrayList<>();
     private MoveValidator moveValidator;
+    
+    // players
+    private Player blackPlayer;
+    private Player whitePlayer;
+    private Player activePlayer;
     
     /**
      * Initialize game
@@ -55,6 +63,76 @@ public class Game {
         // create and locate white Maharaja
         createAndLocateFigure(Figure.COLOR_WHITE, Figure.TYPE_MAHARAJA, Figure.ROW_1, Figure.COLUMN_D);
     }
+    
+    /**
+     * set the player for the specified color
+     * @param figureColor
+     * @param player 
+     */
+    public void setPlayer(int figureColor, Player player) {
+        switch (figureColor) {
+            case Figure.COLOR_BLACK:
+                this.blackPlayer = player; break;
+            case Figure.COLOR_WHITE:
+                this.whitePlayer = player; break;
+        }
+    }
+    
+    /**
+     * start game
+     */
+    public void startGame() {
+        System.out.println("The Maharaja and the cepoys");
+        while (this.blackPlayer == null || this.whitePlayer == null) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+        
+        this.activePlayer = this.whitePlayer;
+        
+        while ( !isGameEndConditionReached() ) {
+            waitForMove();
+            switchActivePlayer();
+        }
+        System.out.println("Game Over!");
+        if(this.activePlayer == whitePlayer) {
+            System.out.println("White player won!");
+        } else {
+            System.out.println("Black player won!");
+        }
+    }
+    
+    private void switchActivePlayer() {
+        if (this.activePlayer == this.whitePlayer) {
+            this.activePlayer = this.blackPlayer;
+        } else {
+            this.activePlayer = this.blackPlayer;
+        }
+        this.changeGameState();
+    }
+    
+    private void waitForMove() {
+        Move move = null;
+        do {
+            move = this.activePlayer.getMove();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        } while (move == null || !this.moveValidator.isMoveValid(move));
+        
+        boolean success = this.movePiece(move);
+        if (success) {
+            this.blackPlayer.moveSuccesfullyExecuted(move);
+            this.whitePlayer.moveSuccesfullyExecuted(move);
+        } else {
+            throw new IllegalStateException("Failed to execute move");
+        }
+    }
 
     public MoveValidator getMoveValidator() {
         return moveValidator;
@@ -74,33 +152,25 @@ public class Game {
     /**
      * Move figure to specified location. If location is occupied, the
      * opponent figure is marked as 'captured'
-     * @param sourceRow source row (Figure.ROW_..) of the figure to move
-     * @param sourceColumn source column (Figure.COLUMN_..) of the figure to move
-     * @param targetRow the target row (Figure.ROW_..)
-     * @param targetColumn the target column (Figure.COLUMN_..)
+     * @param move
+     * @return true if valid move
      */
     public boolean movePiece(Move move) {
-        if (!this.moveValidator.isMoveValid(move)) {
-            System.out.println("Invalid move");
-            return false;
-        }
+        Figure figure = getNonCapturedFigureAt(move.getSourceRow(), move.getSourceColumn());
         
-        Figure fig = getNonCapturedFigureAt(move.getSourceRow(), move.getSourceColumn());
+        // is move capturing an opponent figure?
+        int opponentColor = (figure.getColor() == Figure.COLOR_BLACK ? 
+                Figure.COLOR_WHITE : Figure.COLOR_BLACK);
         
-        // check if the move is capturing an opponent figure
-        int opponentColor = (fig.getColor() == Figure.COLOR_BLACK ? Figure.COLOR_WHITE : Figure.COLOR_BLACK);
-        if (isNonCapturedFigureAt(opponentColor, move.getTargetRow(), move.getTargetColumn())) {
-            Figure opponentFig = getNonCapturedFigureAt(move.getTargetRow(), move.getTargetColumn());
-            opponentFig.isCaptured(true);
+        if (isNonCapturedFigureAt(opponentColor, 
+                move.getTargetRow(), move.getTargetColumn())) {
+            Figure opponentFigure = getNonCapturedFigureAt(move.getTargetRow(), move.getTargetColumn());
+            this.figures.remove(opponentFigure);
+            this.capturedFigures.add(opponentFigure);
+            opponentFigure.isCaptured(true);
         }
-        fig.setRow(move.getTargetRow());
-        fig.setColumn(move.getTargetColumn());
-        
-        if (isGameEndConditionReached()) {
-            this.gameState = GAME_STATE_END;
-        } else {
-            this.changeGameState();
-        }
+        figure.setRow(move.getTargetRow());
+        figure.setColumn(move.getTargetColumn());
         return true;
     }
     
@@ -180,11 +250,11 @@ public class Game {
     public void changeGameState() {
         if (this.isGameEndConditionReached()) {
             if (this.gameState == Game.GAME_STATE_BLACK) {
-                System.out.println("Game over! Black Player WIN!");
-            } else {
-                System.out.println("Game over! White Player WIN!");
+                this.gameState = Game.GAME_STATE_END_BLACK_WON;
+            } else if (this.gameState == Game.GAME_STATE_WHITE) {
+                this.gameState = Game.GAME_STATE_END_WHITE_WON;
             }
-            this.gameState = Game.GAME_STATE_END;
+            return;
         }
         
         switch (this.gameState) {
@@ -194,7 +264,8 @@ public class Game {
             case GAME_STATE_WHITE:
                 this.gameState = GAME_STATE_BLACK;
                 break;
-            case GAME_STATE_END:
+            case GAME_STATE_END_WHITE_WON:
+            case GAME_STATE_END_BLACK_WON:
                 break;
             default:
                 throw new IllegalStateException("Unknown game state: " + this.gameState);
@@ -206,12 +277,17 @@ public class Game {
      * @return true is the game end condition is met
      */
     private boolean isGameEndConditionReached() {
-        for (Figure fig : this.figures) {
-            if(fig.getType() == Figure.TYPE_KING && fig.isCaptured()
-                    || fig.getType() == Figure.TYPE_MAHARAJA && fig.isCaptured()) {
+        for (Figure fig : this.capturedFigures) {
+            if(fig.getType() == Figure.TYPE_KING || 
+               fig.getType() == Figure.TYPE_MAHARAJA) {
                 return true;
             }
         }
         return false;
+    }
+    
+    @Override
+    public void run() {
+        this.startGame();
     }
 }

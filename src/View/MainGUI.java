@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import model.Figure;
 import model.Move;
 import model.MoveValidator;
+import model.Player;
 
 
 /**
@@ -30,7 +31,7 @@ import model.MoveValidator;
  * all lists are treated as 0 being the bottom and size-1 being the top figure
  * 
  */
-public class MainGUI extends JPanel {
+public class MainGUI extends JPanel implements Player {
     
     private static final int BOARD_START_X = 301;
     private static final int BOARD_START_Y = 51;
@@ -49,15 +50,18 @@ public class MainGUI extends JPanel {
     
     private Image imgBackground;
     private JLabel lblGameState;
-    private JLabel lblGameMessages;
+    private JFrame f = new JFrame();
     
     private Game game;
     private ArrayList<FigureGUI> guiFigures = new ArrayList<FigureGUI>();
     
     private FigureGUI dragFigure;
     private Move lastMove;
+    private Move currentMove;
     
-    public MainGUI() {
+    private boolean draggingFiguresEnabled;
+    
+    public MainGUI(Game game) {
         this.setLayout(null);
         // load and set background image
         try {
@@ -68,7 +72,7 @@ public class MainGUI extends JPanel {
         }
         
         // create game
-        this.game = new Game();
+        this.game = game;
         
         // wrap figures into their graphical representation
         for (Figure figure : this.game.getFigures()) {
@@ -80,32 +84,44 @@ public class MainGUI extends JPanel {
         this.addMouseListener(listener);
         this.addMouseMotionListener(listener);
         
-        // button to change state
-        JButton btnChangeGameState = new JButton("Change player");
-        btnChangeGameState.addActionListener( new ChangeGameStateButtonActionListener(this) );
-        btnChangeGameState.setBounds(0, 0, 120, 30);
-        this.add(btnChangeGameState);
-        
         // label to display game state
         String labelText = "Current player: " + this.getGameStateAsText();
         this.lblGameState = new JLabel(labelText);
-        lblGameState.setBounds(0, 30, 150, 30);
+        lblGameState.setBounds(0, 30, 200, 30);
         lblGameState.setForeground(Color.WHITE);
         this.add(lblGameState);
         
         // create application frame and set visible
-        JFrame f = new JFrame();
+        f.setSize(80, 80);
         f.setVisible(true);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.add(this);
         f.setSize(this.imgBackground.getWidth(null), this.imgBackground.getHeight(null)); 
+    }
+    
+    /**
+     * Set title for JFrame
+     */
+    public void setFrameTittle(String tittle) {
+        this.f.setTitle(tittle);
     }
         
     /**
      * @return textual description of current game state
      */
     private String getGameStateAsText() {
-        return (this.game.getGameState() == Game.GAME_STATE_BLACK ? "Black" : "White");
+        String state = "Unknown";
+        switch (this.game.getGameState()) {
+            case Game.GAME_STATE_BLACK:
+                state = "Black player"; break;
+            case Game.GAME_STATE_WHITE:
+                state = "White Player"; break;
+            case Game.GAME_STATE_END_BLACK_WON:
+                state = "Black player won!"; break;
+            case Game.GAME_STATE_END_WHITE_WON:
+                state = "White player won!"; break;
+        }
+        return state;
     }
     
     /**
@@ -288,25 +304,50 @@ public class MainGUI extends JPanel {
         int targetRow = MainGUI.convertYToRow(y);
         int targetColumn = MainGUI.convertXToColumn(x);
         
-        if (targetRow < Figure.ROW_1 || targetRow > Figure.ROW_8 || targetColumn < Figure.COLUMN_A || targetColumn > Figure.COLUMN_H) {
-            // reset to original position if move is not valid
-            dragFigure.resetToUnderlyingFigurePosition();
-        }else{
-            System.out.println("Moving piece to " + targetRow + "/" + targetColumn);
-            Move move = new Move(dragFigure.getFigure().getRow(),
-                                dragFigure.getFigure().getColumn(),
-                                targetRow, targetColumn);
-            boolean wasMoveSuccesfull = this.game.movePiece(move);
-            
-            if (wasMoveSuccesfull) {
-                this.lastMove = move;
-            }
-            
+        Move move = new Move(dragFigure.getFigure().getRow(),
+                             dragFigure.getFigure().getColumn(),
+                             targetRow, targetColumn);
+        if (this.game.getMoveValidator().isMoveValid(move)) {
+            this.currentMove = move;
+        } else {
             dragFigure.resetToUnderlyingFigurePosition();
         }
     }
     
-    public static void main(String[] args) {
-        new MainGUI();
+    @Override
+    public Move getMove() {
+        this.draggingFiguresEnabled = true;
+        Move moveForExecution = this.currentMove;
+        this.currentMove = null;
+        return moveForExecution;
+    }
+    
+    @Override
+    public void moveSuccesfullyExecuted(Move move) {
+        FigureGUI guiFigure = this.getGuiFigureAt(move.getTargetRow(), move.getTargetColumn());
+        
+        if (guiFigure == null) {
+            throw new IllegalStateException("No figure at " + move.getTargetRow() + "/" + move.getTargetColumn());
+        }
+        guiFigure.resetToUnderlyingFigurePosition();
+        
+        this.lastMove = move;
+        this.draggingFiguresEnabled = false;
+        this.repaint();
+    }
+    
+    public boolean isDraggingFiguresEnabled() {
+        return this.draggingFiguresEnabled;
+    }
+    
+    private FigureGUI getGuiFigureAt(int row, int column) {
+        for (FigureGUI guiFigure : this.guiFigures) {
+            if (guiFigure.getFigure().getRow() == row
+                    && guiFigure.getFigure().getColumn() == column
+                    && guiFigure.isCaptured() == false) {
+                return guiFigure;
+            }
+        }
+        return null;
     }
 }

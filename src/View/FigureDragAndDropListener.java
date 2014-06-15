@@ -32,6 +32,10 @@ class FigureDragAndDropListener implements MouseListener, MouseMotionListener {
 
     @Override
     public void mousePressed(MouseEvent event) {
+        if (!this.mainGUI.isDraggingFiguresEnabled()) {
+            return;
+        }
+        
         int x = event.getPoint().x;
         int y = event.getPoint().y;
         
@@ -87,10 +91,9 @@ class FigureDragAndDropListener implements MouseListener, MouseMotionListener {
             int x = e.getPoint().x - this.dragOffsetX;
             int y = e.getPoint().y - this.dragOffsetY;
             
-            System.out.println("Row: " + MainGUI.convertYToRow(y) + "Column: " + MainGUI.convertXToColumn(x));
-            
-            this.dragFigure.setX(x);
-            this.dragFigure.setY(y);
+            FigureGUI guiFigure = this.mainGUI.getDragFigure();
+            dragFigure.setX(x);
+            dragFigure.setY(y);
             this.mainGUI.repaint();
         }        
     }
